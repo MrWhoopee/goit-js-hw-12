@@ -11,8 +11,114 @@
 @import url('./animations.css');
 
 /* Sections style */
-@import url('./header.css');
-@import url('./vite-promo.css');
-@import url('./badges.css');
-@import url('./back-link.css');
-@import url('./footer.css');
+
+.form {
+  margin: 0 auto;
+}
+
+.my-toast .iziToast-close {
+  background-image: url('../img/close.svg') !important;
+  background-size: 16px 16px !important;
+  background-position: center !important;
+  right: -20px !important;
+}
+
+.my-toast .iziToast-close:before {
+  display: none !important;
+}
+
+.gallery {
+  max-width: 1440px;
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0 auto;
+  margin-bottom: 32px;
+}
+
+.gallery-item {
+  display: block;
+  overflow: hidden;
+  transition: transform 0.2s linear;
+  border: 1px solid #808080;
+}
+
+.gallery-item img {
+  width: 360px;
+  height: 152px;
+  object-fit: cover;
+  /* display: block; */
+}
+
+.gallery-info {
+  display: flex;
+  /* padding: 0 15px; */
+  justify-content: space-around;
+}
+
+.gallery-info p {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loader {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.5);
+  transform: rotate(45deg);
+  overflow: hidden;
+  margin: 0 auto;
+}
+.loader.visually-hidden {
+  display: none;
+}
+.loader:after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  margin: auto;
+  background: #000000;
+}
+.loader:before {
+  content: '';
+  position: absolute;
+  inset: -15px;
+  margin: auto;
+  background: #e25615;
+  animation: diamondLoader 2s linear infinite;
+}
+@keyframes diamondLoader {
+  0%,
+  10% {
+    transform: translate(-64px, -64px) rotate(-45deg);
+  }
+  90%,
+  100% {
+    transform: translate(0px, 0px) rotate(-45deg);
+  }
+}
+
+.load-more {
+  max-width: 125px;
+  margin: 0 auto;
+  margin-bottom: 32px;
+}
+
+.load-more.visually-hidden {
+  display: none;
+}
+
+.end-message {
+  text-align: center;
+  margin: 0 auto;
+  margin-bottom: 32px;
+  font-size: 16px;
+  color: #242424;
+}
+
+.end-message.visually-hidden {
+  display: none;
+}
