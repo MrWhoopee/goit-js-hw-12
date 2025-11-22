@@ -1,8 +1,11 @@
-import SimpleLightbox from 'simplelightbox';
-import 'simplelightbox/dist/simple-lightbox.min.css';
+import iziToast from 'izitoast';
+import 'izitoast/dist/css/iziToast.min.css';
+import errorUrl from './img/error.svg';
 
 import * as pixabay from './js/pixabay-api.js';
 import * as render from './js/render-functions.js';
+
+render.initLightbox();
 
 const refs = {
   searchFormEl: document.querySelector('.form'),
@@ -12,64 +15,69 @@ const refs = {
   endMessageEl: document.querySelector('.end-message'),
 };
 
-let lightbox = new SimpleLightbox('.gallery-item a', {
-  captions: true,
-  captionsData: 'alt',
-  captionPosition: 'bottom',
-  captionDelay: 250,
-});
-
 let currentPage = 1;
 let currentQuery = '';
 let totalHits = 0;
 let loadedImagesCount = 0;
 
+function toastError(message) {
+  iziToast.error({
+    message,
+    position: 'topRight',
+    backgroundColor: '#ef4040',
+    titleColor: '#fff',
+    messageColor: '#fff',
+    progressBarColor: '#b51b1b',
+    iconUrl: errorUrl,
+    close: true,
+    class: 'my-toast',
+  });
+}
+
 const searchFormFunction = async e => {
   e.preventDefault();
   const query = e.target.elements['search-text'].value.trim();
-  if (!query) return;
 
-  // If new search, update query
-  if (query !== currentQuery) {
-    currentQuery = query;
+  if (!query) {
+    toastError('Fill the form please');
+    return;
   }
 
-  // Always reset pagination on form submit
+  currentQuery = query;
   currentPage = 1;
   loadedImagesCount = 0;
 
-  // Hide button and message on new search
   render.hideLoadMoreButton(refs.loadMoreBtnEl);
   render.hideEndMessage(refs.endMessageEl);
   render.clearGallery(refs.galleryContainer);
   render.showLoader(refs.loaderEl);
 
   try {
-    const result = await pixabay.getImagesByQuery(currentQuery, currentPage);
+    const { hits, totalHits: total } = await pixabay.getImagesByQuery(
+      currentQuery,
+      currentPage
+    );
 
-    if (!result) {
-      return;
-    }
-
-    const { hits, totalHits: total } = result;
     totalHits = total;
     loadedImagesCount += hits.length;
 
     render.createGallery(refs.galleryContainer, hits);
-    lightbox.refresh();
+    render.refreshLightbox();
 
-    // Check if we've reached the end of the collection
     if (loadedImagesCount >= totalHits) {
-      render.hideLoadMoreButton(refs.loadMoreBtnEl);
       render.showEndMessage(refs.endMessageEl);
     } else {
       render.showLoadMoreButton(refs.loadMoreBtnEl);
-      render.hideEndMessage(refs.endMessageEl);
     }
 
     currentPage += 1;
   } catch (error) {
-    console.error('Error fetching images:', error);
+    if (error.message === 'EMPTY_QUERY') toastError('Fill the form please');
+    if (error.message === 'NO_RESULTS')
+      toastError(
+        'Sorry, there are no images matching your search query. Please try again!'
+      );
+    else toastError('Failed to fetch images. Please try again later.');
   } finally {
     render.hideLoader(refs.loaderEl);
   }
@@ -80,33 +88,28 @@ const loadMoreFunction = async () => {
   render.showLoader(refs.loaderEl);
 
   try {
-    const result = await pixabay.getImagesByQuery(currentQuery, currentPage);
+    const { hits, totalHits: total } = await pixabay.getImagesByQuery(
+      currentQuery,
+      currentPage
+    );
 
-    if (!result) {
-      return;
-    }
-
-    const { hits, totalHits: total } = result;
     totalHits = total;
     loadedImagesCount += hits.length;
 
     render.createGallery(refs.galleryContainer, hits);
-    lightbox.refresh();
+    render.refreshLightbox();
 
-    // Check if we've reached the end of the collection
     if (loadedImagesCount >= totalHits) {
-      render.hideLoadMoreButton(refs.loadMoreBtnEl);
       render.showEndMessage(refs.endMessageEl);
     } else {
       render.showLoadMoreButton(refs.loadMoreBtnEl);
-      render.hideEndMessage(refs.endMessageEl);
     }
 
-    // Smooth scrolling
-    const galleryItems =
-      refs.galleryContainer.querySelectorAll('.gallery-item');
-    if (galleryItems.length > 0) {
-      const lastCard = galleryItems[galleryItems.length - 1];
+    // Smooth scroll
+    const lastCard = refs.galleryContainer.querySelector(
+      '.gallery-item:last-child'
+    );
+    if (lastCard) {
       const cardHeight = lastCard.getBoundingClientRect().height;
       window.scrollBy({
         top: cardHeight * 2,
@@ -116,7 +119,7 @@ const loadMoreFunction = async () => {
 
     currentPage += 1;
   } catch (error) {
-    console.error('Error fetching more images:', error);
+    toastError('Failed to fetch more images. Please try again later.');
   } finally {
     render.hideLoader(refs.loaderEl);
   }
